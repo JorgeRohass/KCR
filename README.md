@@ -8,11 +8,29 @@ Base full-stack con Vue 3, Django REST Framework y PostgreSQL.
 - Node.js 20+
 - Docker Compose
 
-## Configuracion
+## Esquema de datos
 
-1. Copia `.env.example` a `.env` y ajusta los valores.
-2. Inicia PostgreSQL: `docker compose up -d db`.
-3. Prepara el backend:
+La app Django `catalogo` define estas tablas:
+
+- `usuario`: identidad común con correo, contraseña almacenada con el hash de Django y rol (`admin`, `operador` o `cliente`).
+- `invitacion`: usuario invitado, usuario creador, hash del token, vencimiento y fecha de uso.
+- `catalogo`: pertenece a un cliente y registra el usuario que lo creó.
+- `catalogo_operador`: relación muchos-a-muchos entre catálogos y operadores.
+- `producto`: productos pertenecientes a un catálogo.
+- `version_previa_catalogo`: cambios del catálogo y usuario editor.
+
+Los tres roles son valores de `usuario.rol`, no tablas separadas. La estructura de `invitacion` está definida en el esquema, pero aún no hay endpoints para iniciar sesión ni para crear o aceptar invitaciones. La API disponible por ahora es `GET /api/health/`.
+
+## Configuración y ejecución
+
+1. Copia `.env.example` a `.env` en la raíz y ajusta las credenciales de PostgreSQL y `DJANGO_SECRET_KEY`.
+2. Inicia PostgreSQL:
+
+   ```sh
+   docker compose up -d db
+   ```
+
+3. Prepara y migra el backend:
 
    ```sh
    cd backend
@@ -20,8 +38,11 @@ Base full-stack con Vue 3, Django REST Framework y PostgreSQL.
    source .venv/bin/activate
    pip install -r requirements.txt
    python manage.py migrate
+   python manage.py createsuperuser
    python manage.py runserver
    ```
+
+   `createsuperuser` crea el primer usuario con rol `admin`. El modelo de usuario personalizado debe estar configurado antes de la migración inicial; cambiar `AUTH_USER_MODEL` después de crear las tablas requiere una migración de datos planificada.
 
 4. En otra terminal, inicia Vue:
 
@@ -31,46 +52,4 @@ Base full-stack con Vue 3, Django REST Framework y PostgreSQL.
    npm run dev
    ```
 
-Vue queda disponible en `http://localhost:5173` y la API en `http://localhost:8000/api/health/`.
-
-## Estructura
-
-- `frontend/`: aplicacion Vue 3 y servidor Vite.
-- `backend/`: proyecto Django y API REST.
-- `backend/catalogo/`: usuarios, invitaciones, catalogos, productos e historial de versiones.
-- `docker-compose.yml`: servicio PostgreSQL persistente.
-
-El endpoint de salud confirma la conexion con la base de datos.
-
-## Modelo de datos
-
-La app Django `catalogo` usa un unico usuario autenticable con rol `admin`, `operador` o `cliente`. Un catalogo pertenece a un cliente, tiene un operador creador y puede asignarse a varios operadores; contiene productos e historial de versiones. El diagrama entidad-relacion esta en [docs/diagrama-relaciones.svg](./docs/diagrama-relaciones.svg).
-
-Para crear el primer administrador, inicializar las tablas y arrancar:
-
-```sh
-cd backend
-python manage.py migrate
-python manage.py createsuperuser
-python manage.py runserver
-```
-
-El superusuario inicial tiene rol `admin`. Desde una sesion autenticada como admin, la API permite invitar operadores o clientes:
-
-```http
-POST /api/auth/invitations/
-Content-Type: application/json
-
-{"email":"persona@example.com","nombre":"Nombre","apellidos":"Apellido","rol":"operador"}
-```
-
-El correo incluye un enlace de un solo uso que vence en 48 horas. El invitado establece una contraseña de al menos 12 caracteres en Vue; luego inicia sesion con su correo. En desarrollo, Django imprime el correo en la consola del backend.
-
-La API usa sesiones y proteccion CSRF: el cliente debe solicitar primero `GET /api/auth/csrf/` y enviar la cookie `csrftoken` tambien como cabecera `X-CSRFToken` en solicitudes de escritura. Rutas disponibles:
-
-- `POST /api/auth/login/`, `POST /api/auth/logout/` y `GET /api/auth/me/`.
-- `POST /api/auth/invitations/` (solo admin) y `POST /api/auth/invitations/accept/`.
-
-Para enviar invitaciones fuera de desarrollo, configura SMTP mediante `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `EMAIL_USE_TLS` y `DEFAULT_FROM_EMAIL`. Configura `INVITATION_FRONTEND_URL` con la URL publica de Vue. Para permitir el frontend en la API, ajusta `CORS_ALLOWED_ORIGINS` y `CSRF_TRUSTED_ORIGINS`.
-
-Si ya ejecutaste una migracion previa del esquema antiguo en una base de datos persistente, no apliques esta migracion inicial recreada sobre esas tablas; se requiere una migracion de datos acorde a esa base. El esquema nuevo debe inicializarse en una base vacia.
+Vue queda disponible en `http://localhost:5173` y la comprobación de conexión con PostgreSQL en `http://localhost:8000/api/health/`. El frontend usa esa URL de API por defecto. Para cambiarla, define `VITE_API_URL` en un archivo de entorno de Vite dentro de `frontend/`. Si el frontend cambia de origen, actualiza `CORS_ALLOWED_ORIGINS` en `.env`.

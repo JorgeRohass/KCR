@@ -23,7 +23,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'corsheaders',
     'rest_framework',
+    'catalogo',
 ]
+
+AUTH_USER_MODEL = 'catalogo.Usuario'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
