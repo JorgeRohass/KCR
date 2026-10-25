@@ -3,15 +3,15 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-kcr}
-      POSTGRES_USER: ${POSTGRES_USER:-kcr}
+      POSTGRES_DB: ${POSTGRES_DB:-empresa}
+      POSTGRES_USER: ${POSTGRES_USER:-empresa}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-kcr} -d ${POSTGRES_DB:-kcr}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-empresa} -d ${POSTGRES_DB:-empresa}"]
       interval: 5s
       timeout: 5s
       retries: 5

@@ -8,6 +8,7 @@ load_dotenv(BASE_DIR.parent / '.env')
 
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'development-only-insecure-key')
 DEBUG = os.getenv('DJANGO_DEBUG', 'True').lower() == 'true'
+ALLOW_TEST_USERS = os.getenv('ALLOW_TEST_USERS', 'False').lower() == 'true'
 ALLOWED_HOSTS = [
     host.strip()
     for host in os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
@@ -61,8 +62,8 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('POSTGRES_DB', 'kcr'),
-        'USER': os.getenv('POSTGRES_USER', 'kcr'),
+        'NAME': os.getenv('POSTGRES_DB', 'empresa'),
+        'USER': os.getenv('POSTGRES_USER', 'empresa'),
         'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'change-me'),
         'HOST': os.getenv('POSTGRES_HOST', 'localhost'),
         'PORT': os.getenv('POSTGRES_PORT', '5432'),
