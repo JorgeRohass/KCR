@@ -1,4 +1,4 @@
-# KCR workspace instructions
+# workspace instructions
 
 - Frontend: Vue 3 with Vite in `frontend/`.
 - Backend: Django REST Framework in `backend/`.

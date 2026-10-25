@@ -1,4 +1,4 @@
-# KCR
+# EMPRESA
 
 Base full-stack con Vue 3, Django REST Framework y PostgreSQL.
 
