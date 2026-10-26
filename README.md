@@ -38,11 +38,12 @@ Los tres roles son valores de `usuario.rol`, no tablas separadas. La estructura 
    source .venv/bin/activate
    pip install -r requirements.txt
    python manage.py migrate
-   python manage.py createsuperuser
    python manage.py runserver
    ```
 
-   `createsuperuser` crea el primer usuario con rol `admin`. El modelo de usuario personalizado debe estar configurado antes de la migración inicial; cambiar `AUTH_USER_MODEL` después de crear las tablas requiere una migración de datos planificada.
+   La base de datos debe estar migrada y el modelo de usuario personalizado configurado antes de la migración inicial.
+
+   `createsuperuser` es una operación separada, reservada para una cuenta técnica que necesite administrar Django. No la uses para crear administradores normales de la aplicación.
 
 4. En otra terminal, inicia Vue:
 
@@ -53,6 +54,20 @@ Los tres roles son valores de `usuario.rol`, no tablas separadas. La estructura 
    ```
 
 Vue queda disponible en `http://localhost:5173` y la comprobación de conexión con PostgreSQL en `http://localhost:8000/api/health/`. El frontend usa esa URL de API por defecto. Para cambiarla, define `VITE_API_URL` en un archivo de entorno de Vite dentro de `frontend/`. Si el frontend cambia de origen, actualiza `CORS_ALLOWED_ORIGINS` en `.env`.
+
+## Crear el administrador principal
+
+Después de aplicar las migraciones y antes de crear otras cuentas, ejecuta el comando desde `backend/`:
+
+```sh
+python manage.py crear_admin_principal \
+  --email admin@tu-dominio.com \
+  --nombre Admin \
+  --apellidos Principal \
+  --confirmar
+```
+
+El comando solo funciona si la tabla de usuarios está vacía. Solicita la contraseña dos veces en la terminal, requiere al menos 16 caracteres y crea el primer usuario con rol `admin` y `puede_crear_administradores=True`. No imprime ni recibe la contraseña como argumento y no concede `is_staff` ni `is_superuser`; por tanto, esa cuenta no obtiene acceso al admin interno de Django.
 
 ## Usuarios base de prueba
 
