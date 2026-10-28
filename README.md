@@ -10,6 +10,8 @@ Base full-stack con Vue 3, Django REST Framework y PostgreSQL.
 
 ## Esquema de datos
 
+El diagrama de las tablas propias de la aplicación y sus relaciones está en [docs/Esquema.png](docs/Esquema.png).
+
 La app Django `catalogo` define estas tablas:
 
 - `usuario`: identidad común con correo, contraseña almacenada con el hash de Django y rol (`admin`, `operador` o `cliente`).
@@ -17,9 +19,12 @@ La app Django `catalogo` define estas tablas:
 - `catalogo`: pertenece a un cliente y registra el usuario que lo creó.
 - `catalogo_operador`: relación muchos-a-muchos entre catálogos y operadores.
 - `producto`: productos pertenecientes a un catálogo.
-- `version_previa_catalogo`: cambios del catálogo y usuario editor.
+- `version_catalogo`: versión numerada del catálogo, con editor, fecha y motivo.
+- `producto_version`: copia completa de los productos que pertenecen a cada versión.
 
 Los tres roles son valores de `usuario.rol`, no tablas separadas. La estructura de `invitacion` está definida en el esquema, pero aún no hay endpoints para iniciar sesión ni para crear o aceptar invitaciones. La API disponible por ahora es `GET /api/health/`.
+
+El backend permite crear una foto completa del catálogo con `guardar_version_catalogo(catalogo, editor, motivo)` y restaurar una versión con `restaurar_version_catalogo(version, editor, motivo)`, desde `catalogo.services`. Ambas operaciones son transaccionales. Una restauración reemplaza los productos actuales y registra el resultado como una versión nueva, enlazada con `restaurada_desde`; no elimina el historial previo.
 
 ## Configuración y ejecución
 

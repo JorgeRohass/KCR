@@ -122,7 +122,6 @@ class Catalogo(models.Model):
     )
     cliente_puede_editar = models.BooleanField(default=False)
     operador_puede_editar = models.BooleanField(default=True)
-    version = models.PositiveIntegerField(default=1)
     actualizacion_habilitada = models.BooleanField(default=False)
 
     class Meta:
@@ -185,30 +184,67 @@ class Producto(models.Model):
         return self.titulo
 
 
-class VersionPreviaCatalogo(models.Model):
+class VersionCatalogo(models.Model):
     catalogo = models.ForeignKey(
         Catalogo,
         on_delete=models.CASCADE,
-        related_name='versiones_previas',
+        related_name='versiones',
     )
     editor = models.ForeignKey(
         Usuario,
         on_delete=models.PROTECT,
-        related_name='versiones_editadas',
+        related_name='versiones_catalogo_editadas',
     )
-    version = models.PositiveIntegerField()
-    cambios = models.TextField()
+    numero = models.PositiveIntegerField()
+    creada_en = models.DateTimeField(auto_now_add=True)
+    motivo = models.CharField(max_length=255, blank=True)
+    restaurada_desde = models.ForeignKey(
+        'self',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='restauraciones',
+    )
 
     class Meta:
-        db_table = 'version_previa_catalogo'
-        verbose_name = 'versión previa de catálogo'
-        verbose_name_plural = 'versiones previas de catálogo'
+        db_table = 'version_catalogo'
+        verbose_name = 'versión de catálogo'
+        verbose_name_plural = 'versiones de catálogo'
         constraints = [
             models.UniqueConstraint(
-                fields=('catalogo', 'version'),
-                name='catalogo_version_unica',
+                fields=('catalogo', 'numero'),
+                name='version_catalogo_numero_unico',
             ),
         ]
+        ordering = ('-numero',)
 
     def __str__(self):
-        return f'{self.catalogo} - versión {self.version}'
+        return f'{self.catalogo} - versión {self.numero}'
+
+
+class ProductoVersion(models.Model):
+    version = models.ForeignKey(
+        VersionCatalogo,
+        on_delete=models.CASCADE,
+        related_name='productos',
+    )
+    producto_id_original = models.PositiveBigIntegerField()
+    foto = models.URLField(blank=True)
+    titulo = models.CharField(max_length=200)
+    origen = models.CharField(max_length=150, blank=True)
+    precio = models.DecimalField(max_digits=12, decimal_places=2)
+    descripcion = models.TextField(blank=True)
+    url = models.URLField(blank=True)
+    codigo_sku = models.CharField(max_length=100)
+    capacidad = models.CharField(max_length=100, blank=True)
+    organizacion = models.CharField(max_length=150, blank=True)
+    flag_visibilidad = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = 'producto_version'
+        verbose_name = 'producto versionado'
+        verbose_name_plural = 'productos versionados'
+        ordering = ('producto_id_original',)
+
+    def __str__(self):
+        return f'{self.titulo} - versión {self.version.numero}'
