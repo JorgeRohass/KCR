@@ -22,7 +22,9 @@ La app Django `catalogo` define estas tablas:
 - `version_catalogo`: versión numerada del catálogo, con editor, fecha y motivo.
 - `producto_version`: copia completa de los productos que pertenecen a cada versión.
 
-Los tres roles son valores de `usuario.rol`, no tablas separadas. La estructura de `invitacion` está definida en el esquema, pero aún no hay endpoints para iniciar sesión ni para crear o aceptar invitaciones. La API disponible por ahora es `GET /api/health/`.
+Los tres roles son valores de `usuario.rol`, no tablas separadas. La estructura de `invitacion` está definida en el esquema, pero aún no hay endpoints para crear o aceptar invitaciones. La API incluye `GET /api/health/` y `POST /api/auth/login/`.
+
+El inicio de sesión recibe JSON con `email` y `password`. Si las credenciales son válidas y la cuenta está activa, establece una sesión Django mediante cookie y responde con l "Credenciales correctas" ("200").Para "Credenciales incorrectas" devuelve "401" y para datos inválidos, "400"
 
 El backend permite crear una foto completa del catálogo con `guardar_version_catalogo(catalogo, editor, motivo)` y restaurar una versión con `restaurar_version_catalogo(version, editor, motivo)`, desde `catalogo.services`. Ambas operaciones son transaccionales. Una restauración reemplaza los productos actuales y registra el resultado como una versión nueva, enlazada con `restaurada_desde`; no elimina el historial previo.
 
