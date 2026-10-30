@@ -9,6 +9,11 @@ load_dotenv(BASE_DIR.parent / '.env')
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'development-only-insecure-key')
 DEBUG = os.getenv('DJANGO_DEBUG', 'True').lower() == 'true'
 ALLOW_TEST_USERS = os.getenv('ALLOW_TEST_USERS', 'False').lower() == 'true'
+FRONTEND_BASE_URL = os.getenv(
+    'FRONTEND_BASE_URL',
+    'http://localhost:5173',
+).rstrip('/')
+INVITATION_TTL_DAYS = int(os.getenv('INVITATION_TTL_DAYS', '7'))
 ALLOWED_HOSTS = [
     host.strip()
     for host in os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
@@ -28,6 +33,33 @@ INSTALLED_APPS = [
 ]
 
 AUTH_USER_MODEL = 'catalogo.Usuario'
+
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        'NAME': (
+            'django.contrib.auth.password_validation.'
+            'UserAttributeSimilarityValidator'
+        ),
+    },
+    {
+        'NAME': (
+            'django.contrib.auth.password_validation.'
+            'MinimumLengthValidator'
+        ),
+    },
+    {
+        'NAME': (
+            'django.contrib.auth.password_validation.'
+            'CommonPasswordValidator'
+        ),
+    },
+    {
+        'NAME': (
+            'django.contrib.auth.password_validation.'
+            'NumericPasswordValidator'
+        ),
+    },
+]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

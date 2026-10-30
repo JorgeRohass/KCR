@@ -1,13 +1,95 @@
-from django.db import transaction
+import hashlib
+import secrets
+from datetime import timedelta
+
+from django.conf import settings
+from django.contrib.auth.password_validation import validate_password
+from django.db import IntegrityError, transaction
 from django.db.models import Max
+from django.utils import timezone
 
 from catalogo.models import (
     Catalogo,
+    Invitacion,
     Producto,
     ProductoVersion,
     Usuario,
     VersionCatalogo,
 )
+
+
+class InvitacionNoValida(Exception):
+    pass
+
+
+class CorreoYaRegistrado(Exception):
+    pass
+
+
+@transaction.atomic
+def crear_invitacion(
+    *,
+    email: str,
+    nombre: str,
+    apellidos: str,
+    rol: str,
+    creado_por: Usuario,
+) -> tuple[Usuario, Invitacion, str]:
+    email = email.strip().lower()
+    if Usuario.objects.filter(email=email).exists():
+        raise CorreoYaRegistrado
+
+    token = secrets.token_urlsafe(32)
+    try:
+        with transaction.atomic():
+            usuario = Usuario.objects.create_user(
+                email=email,
+                password=None,
+                nombre=nombre.strip(),
+                apellidos=apellidos.strip(),
+                rol=rol,
+                is_active=False,
+            )
+    except IntegrityError as error:
+        if Usuario.objects.filter(email=email).exists():
+            raise CorreoYaRegistrado from error
+        raise
+
+    invitacion = Invitacion.objects.create(
+        usuario=usuario,
+        creado_por=creado_por,
+        token_hash=hashlib.sha256(token.encode()).hexdigest(),
+        expira_en=timezone.now() + timedelta(
+            days=settings.INVITATION_TTL_DAYS,
+        ),
+    )
+    return usuario, invitacion, token
+
+
+@transaction.atomic
+def aceptar_invitacion(token: str, password: str) -> Usuario:
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
+    invitacion = (
+        Invitacion.objects.select_for_update()
+        .select_related('usuario')
+        .filter(
+            token_hash=token_hash,
+            usado_en__isnull=True,
+            expira_en__gt=timezone.now(),
+        )
+        .first()
+    )
+    if invitacion is None or invitacion.usuario.is_active:
+        raise InvitacionNoValida
+
+    usuario = invitacion.usuario
+    validate_password(password, user=usuario)
+    usuario.set_password(password)
+    usuario.is_active = True
+    usuario.save(update_fields=['password', 'is_active'])
+    invitacion.usado_en = timezone.now()
+    invitacion.save(update_fields=['usado_en'])
+    return usuario
 
 
 _CAMPOS_PRODUCTO = (
