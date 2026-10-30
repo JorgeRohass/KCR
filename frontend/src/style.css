@@ -187,11 +187,30 @@ input {
   background: #d000d9;
 }
 
+.submit-button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
 .submit-button:focus-visible,
 .forgot-password button:focus-visible,
 .visibility-toggle:focus-visible {
   outline: 2px solid #a900af;
   outline-offset: 2px;
+}
+
+.role-label {
+  margin: 0 0 5px;
+  color: #858c88;
+  font-size: 11px;
+  text-align: center;
+}
+
+.role-value {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  text-align: center;
 }
 
 .form-message {

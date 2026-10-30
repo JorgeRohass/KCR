@@ -1,4 +1,4 @@
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from rest_framework import status
 from rest_framework.decorators import (
     api_view,
@@ -6,7 +6,7 @@ from rest_framework.decorators import (
     permission_classes,
 )
 from rest_framework.parsers import JSONParser
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from catalogo.serializers import LoginSerializer
@@ -36,6 +36,31 @@ def iniciar_sesion(request):
     return Response(
         {
             'detail': 'Inicio de sesión exitoso.',
+        },
+        status=status.HTTP_200_OK,
+    )
+
+
+@api_view(['POST'])
+@parser_classes([JSONParser])
+@permission_classes([IsAuthenticated])
+def cerrar_sesion(request):
+    logout(request._request)
+    return Response(
+        {'detail': 'Cierre de sesión exitoso.'},
+        status=status.HTTP_200_OK,
+    )
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def usuario_actual(request):
+    usuario = request.user
+    return Response(
+        {
+            'nombre_completo': f'{usuario.nombre} {usuario.apellidos}'.strip(),
+            'rol': usuario.rol,
+            'rol_nombre': usuario.get_rol_display(),
         },
         status=status.HTTP_200_OK,
     )
