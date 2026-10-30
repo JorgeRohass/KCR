@@ -45,6 +45,7 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
     nombre = models.CharField(max_length=100)
     apellidos = models.CharField(max_length=150)
+    fono = models.CharField(max_length=20, blank=True, default='')
     rol = models.CharField(max_length=20, choices=Rol.choices)
     puede_crear_administradores = models.BooleanField(default=False)
     is_active = models.BooleanField(default=False)

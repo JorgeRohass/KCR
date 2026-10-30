@@ -14,7 +14,7 @@ El diagrama de las tablas propias de la aplicación y sus relaciones está en [d
 
 La app Django `catalogo` define estas tablas:
 
-- `usuario`: identidad común con correo, contraseña almacenada con el hash de Django y rol (`admin`, `operador` o `cliente`).
+- `usuario`: identidad común con correo, teléfono (`fono`), contraseña almacenada con el hash de Django y rol (`admin`, `operador` o `cliente`).
 - `invitacion`: usuario invitado, usuario creador, hash del token, vencimiento y fecha de uso.
 - `catalogo`: pertenece a un cliente y registra el usuario que lo creó.
 - `catalogo_operador`: relación muchos-a-muchos entre catálogos y operadores.
